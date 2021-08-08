@@ -1,0 +1,24 @@
+main()
+1.ini.MapTo()
+    加载配置文件
+2. kafka.Init()
+    2.1 sarama.NewSyncProducer()
+        初始化kafka生产者client
+    2.2 msgChan = make(chan *sarama.ProducerMessage, chanSize)
+        初始化存放日志数据的channel 将读日志和发送日志改为异步执行
+    2.3 go sendMsg()
+        后台goroutine 从msgChan中接收日志数据发送到kafka
+3. etcd.Init()
+    3.1 clientv3.New()
+        初始化一个连接etcd的client
+4. etcd.GetConf()
+    去etcd中根据给定的key获取配置文件 配置文件是一个切片 切片中的每一项是日志文件的路径和topic
+5. go etcd.WatchConf()
+    启动一个后台的goroutine 监听etcd中的日志收集项是否发生变化
+6. tailfile.Init()
+    6.1 ttMgr = &tailTaskMgr{}
+        创建一个全局的tailTask管理者
+    6.2 newTailTask(conf.Path, conf.Topic)
+        遍历传过来的配置 每有一个配置项就启动一个tailTask 启动一个后台的goroutine去执行日志收集
+    6.3 go ttMgr.watch()
+        启动后台的goroutine去等新的配置来 从一个无缓冲的channel中接收新配置
